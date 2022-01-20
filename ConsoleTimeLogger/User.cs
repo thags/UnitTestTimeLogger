@@ -194,11 +194,8 @@ namespace ConsoleTimeLogger
                 Console.WriteLine("Input a year in format yyyy");
                 attempts++;
                 string userYearInputString = Console.ReadLine();
-                int userInputLen = userYearInputString.Length;
-                bool parseInput = int.TryParse(userYearInputString, out userYearInput);
 
-                if (parseInput && userInputLen == 4 && 
-                    (userYearInput <= DateTime.Today.Year && userYearInput >= 1900))
+                if (IsCorrectYearInput(userYearInputString))
                 {
                     return true;
                 }
@@ -228,9 +225,10 @@ namespace ConsoleTimeLogger
             {
                 Console.Clear();
                 Console.WriteLine("Input a month between 1-12");
+                string userMonthInput = Console.ReadLine();
                 attempts++;
-                bool parseInput = int.TryParse(Console.ReadLine(), out userInput);
-                if (parseInput && (userInput <= 12 && userInput >= 1))
+                
+                if (IsCorrectMonthInput(userMonthInput))
                 {
                     return true;
                 }
@@ -249,6 +247,29 @@ namespace ConsoleTimeLogger
             }
             return false;
 
+        }
+        private static bool IsCorrectYearInput(string year)
+        {
+            int userInputLen = year.Length;
+            bool parseInput = int.TryParse(year, out int intYear);
+
+            if (parseInput && userInputLen == 4 &&
+                (intYear <= DateTime.Today.Year && intYear >= 1900))
+            {
+                return true;
+            }
+            return false;
+        }
+        private static bool IsCorrectMonthInput(string month)
+        {
+            bool parseInput = int.TryParse(month, out int intMonth);
+            if (!parseInput) { return false; }
+
+            if (intMonth > 0 && intMonth <= 12)
+            {
+                return true;
+            }
+            return false;
         }
         private static long GetUserHours()
         //want to make sure the user inputs a number
