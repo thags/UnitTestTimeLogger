@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace ConsoleTimeLogger
 {
-    class DatabaseManager
+    public class DatabaseManager
     {
         readonly private SqliteConnection Connection;
         public DatabaseManager(string fileName)
@@ -164,13 +164,28 @@ namespace ConsoleTimeLogger
         }
         public static string ParseDate(string day)
         {
-            DateTime dt = new DateTime(long.Parse(day));
-            return dt.ToString("MM-dd-yyyy");
+            try
+            {
+                DateTime dt = new DateTime(long.Parse(day));
+                return dt.ToString("MM-dd-yyyy");
+            }
+            catch
+            {
+                return "false";
+            }
+            
         }
         public static string ParseHours(string hours)
         {
-            TimeSpan ts = new TimeSpan(long.Parse(hours));
-            return ts.ToString("hh\\:mm");
+            try
+            {
+                TimeSpan ts = new TimeSpan(long.Parse(hours));
+                return ts.ToString("hh\\:mm");
+            }
+            catch
+            {
+                return "false";
+            }
         }
     }
 }

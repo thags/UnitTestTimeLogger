@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace ConsoleTimeLogger
 {
-    class Reports
+    public class Reports
     {
         private SqliteConnection Connection;
         public Reports(string fileName)

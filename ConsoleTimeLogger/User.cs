@@ -3,7 +3,7 @@ using System.Globalization;
 
 namespace ConsoleTimeLogger
 {
-    class User
+    public class User
     {
         readonly DatabaseManager DB;
         readonly Reports GetReports;
@@ -248,7 +248,7 @@ namespace ConsoleTimeLogger
             return false;
 
         }
-        private static bool IsCorrectYearInput(string year)
+        public static bool IsCorrectYearInput(string year)
         {
             int userInputLen = year.Length;
             bool parseInput = int.TryParse(year, out int intYear);
@@ -260,7 +260,7 @@ namespace ConsoleTimeLogger
             }
             return false;
         }
-        private static bool IsCorrectMonthInput(string month)
+        public static bool IsCorrectMonthInput(string month)
         {
             bool parseInput = int.TryParse(month, out int intMonth);
             if (!parseInput) { return false; }
