@@ -11,80 +11,94 @@ namespace ConsoleTimeLogger
         public DatabaseManager(string fileName)
         {
             this.Connection = new SqliteConnection($"Data Source={fileName}");
-            this.Connection.Open();
+            //this.Connection.Open();
             this.CreateTableIfNonExistent();
         }
         public static long GetTodayDate() => DateTime.Today.Ticks;
 
         public void CreateTableIfNonExistent()
         {
-            //we want to make sure that the DB has the proper table and columns
-            try
+            using (this.Connection)
             {
-                var createTable = this.Connection.CreateCommand();
-                createTable.CommandText = @"CREATE TABLE time(id INTEGER PRIMARY KEY,
+                try
+                {
+                    this.Connection.Open();
+                    var createTable = this.Connection.CreateCommand();
+                    createTable.CommandText = @"CREATE TABLE time(id INTEGER PRIMARY KEY,
                                                                 hours LONG, 
                                                                 date LONG
                                                                     );";
-                createTable.ExecuteNonQuery();
+                    createTable.ExecuteNonQuery();
+                }
+                catch (SqliteException e)
+                {
+                    Console.WriteLine(e.Message);
+                }
             }
-            catch (SqliteException e)
-            {
-                Console.WriteLine(e.Message);
-            }
+            //we want to make sure that the DB has the proper table and columns
+            
         }
 
         public void View(string selection=null, int limit = 1, long specific = -1)
         {
-            var tableData = new List<List<object>> { new List<object> { "Date", "Hours" } };
-            var selectCmd = this.Connection.CreateCommand();
-            selectCmd.CommandText = "SELECT * FROM time";
-
-            switch (selection)
+            using (this.Connection)
             {
-                case null:
-                    Console.WriteLine("Todays Entry: ");
-                    selectCmd.CommandText = $"SELECT * FROM time WHERE date={GetTodayDate()}";
-                    break;
-                case "all":
-                    selectCmd.CommandText = $"SELECT * FROM time ORDER BY date DESC";
-                    break;
-                case "limit":
-                    selectCmd.CommandText = $"SELECT * FROM time ORDER BY date DESC LIMIT {limit}";
-                    break;
-                case "specific":
-                    selectCmd.CommandText = $"SELECT * FROM time WHERE date={specific}";
-                    break;
-                default:
-                    //selectCmd.CommandText = $"SELECT * FROM time WHERE date={day}";
-                    break;
-            }
+                this.Connection.Open();
+                var tableData = new List<List<object>> { new List<object> { "Date", "Hours" } };
+                var selectCmd = this.Connection.CreateCommand();
+                selectCmd.CommandText = "SELECT * FROM time";
 
-            using var reader = selectCmd.ExecuteReader();
+                switch (selection)
+                {
+                    case null:
+                        Console.WriteLine("Todays Entry: ");
+                        selectCmd.CommandText = $"SELECT * FROM time WHERE date={GetTodayDate()}";
+                        break;
+                    case "all":
+                        selectCmd.CommandText = $"SELECT * FROM time ORDER BY date DESC";
+                        break;
+                    case "limit":
+                        selectCmd.CommandText = $"SELECT * FROM time ORDER BY date DESC LIMIT {limit}";
+                        break;
+                    case "specific":
+                        selectCmd.CommandText = $"SELECT * FROM time WHERE date={specific}";
+                        break;
+                    default:
+                        //selectCmd.CommandText = $"SELECT * FROM time WHERE date={day}";
+                        break;
+                }
+
+                using var reader = selectCmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+
+                    var hours = reader.GetString(1);
+                    var date = reader.GetString(2);
+                    tableData.Add(new List<object> { ParseDate(date), ParseHours(hours) });
+                }
+
+                ConsoleTableBuilder
+                    .From(tableData)
+                    .WithFormat(ConsoleTableBuilderFormat.Alternative)
+                    .ExportAndWriteLine(TableAligntment.Left);
+            }
             
-            while (reader.Read())
-            {
-                
-                var hours = reader.GetString(1);
-                var date = reader.GetString(2);
-                tableData.Add(new List<object>{ParseDate(date), ParseHours(hours)});
-            }
-
-            ConsoleTableBuilder
-                .From(tableData)
-                .WithFormat(ConsoleTableBuilderFormat.Alternative)
-                .ExportAndWriteLine(TableAligntment.Left);
         }
         public void Update(long addHours, long day)
         {
             try
             {
-                var transaction = this.Connection.BeginTransaction();
-                var updateCmd = this.Connection.CreateCommand();
+                using (this.Connection)
+                {
+                    this.Connection.Open();
+                    var transaction = this.Connection.BeginTransaction();
+                    var updateCmd = this.Connection.CreateCommand();
 
-                updateCmd.CommandText = $"UPDATE time SET hours={addHours} WHERE date = {day}";
-                updateCmd.ExecuteNonQuery();
-                transaction.Commit();
+                    updateCmd.CommandText = $"UPDATE time SET hours={addHours} WHERE date = {day}";
+                    updateCmd.ExecuteNonQuery();
+                    transaction.Commit();
+                }
             }
             catch (SqliteException e)
             {
@@ -96,11 +110,15 @@ namespace ConsoleTimeLogger
         {
             try
             {
-                var transaction = this.Connection.BeginTransaction();
-                var deleteCmd = this.Connection.CreateCommand();
-                deleteCmd.CommandText = $"DELETE FROM time WHERE date = {day}";
-                deleteCmd.ExecuteNonQuery();
-                transaction.Commit();
+                using (this.Connection)
+                {
+                    this.Connection.Open();
+                    var transaction = this.Connection.BeginTransaction();
+                    var deleteCmd = this.Connection.CreateCommand();
+                    deleteCmd.CommandText = $"DELETE FROM time WHERE date = {day}";
+                    deleteCmd.ExecuteNonQuery();
+                    transaction.Commit();
+                }
             }
             catch (SqliteException e)
             {
@@ -112,54 +130,62 @@ namespace ConsoleTimeLogger
         {
             bool rowDoesntExist = CheckRowDateDoesntExist(day);
 
-            if (rowDoesntExist)
+            using (this.Connection)
             {
-                var transaction = this.Connection.BeginTransaction();
-                var insertCmd = this.Connection.CreateCommand();
-
-                insertCmd.CommandText = $"INSERT INTO time(hours, date) VALUES({hoursInput},{day})";
-                insertCmd.ExecuteNonQuery();
-                transaction.Commit();
-            }
-            else
-            {
-                Console.Clear();
-                this.View("specific", specific:day);
-
-                Console.WriteLine($"Your entered date of {ParseDate(day.ToString())} already exists");
-                Console.WriteLine("U to update this days entry to the time provided");
-                Console.WriteLine("0 or any other input to return to the main menu with no changes");
-
-                string choice = Console.ReadLine().ToUpper();
-                switch (choice)
+                Connection.Open();
+                if (rowDoesntExist)
                 {
-                    case "U":
-                        Update(hoursInput, day);
-                        View("specific", specific:day);
+                    var transaction = this.Connection.BeginTransaction();
+                    var insertCmd = this.Connection.CreateCommand();
 
-                        Console.WriteLine("Entry has been updated");
-                        Console.WriteLine("Press any key to return to main menu");
-                        Console.ReadLine();
-                        break;
-                    default:
-                        break;
+                    insertCmd.CommandText = $"INSERT INTO time(hours, date) VALUES({hoursInput},{day})";
+                    insertCmd.ExecuteNonQuery();
+                    transaction.Commit();
                 }
-                Console.Clear();
+                else
+                {
+                    Console.Clear();
+                    this.View("specific", specific: day);
+
+                    Console.WriteLine($"Your entered date of {ParseDate(day.ToString())} already exists");
+                    Console.WriteLine("U to update this days entry to the time provided");
+                    Console.WriteLine("0 or any other input to return to the main menu with no changes");
+
+                    string choice = Console.ReadLine().ToUpper();
+                    switch (choice)
+                    {
+                        case "U":
+                            Update(hoursInput, day);
+                            View("specific", specific: day);
+
+                            Console.WriteLine("Entry has been updated");
+                            Console.WriteLine("Press any key to return to main menu");
+                            Console.ReadLine();
+                            break;
+                        default:
+                            break;
+                    }
+                    Console.Clear();
+                }
             }
             
         }
         private bool CheckRowDateDoesntExist(long desiredInput)
         {
-            var checkCmd = this.Connection.CreateCommand();
-            checkCmd.CommandText = $"SELECT COUNT(*) FROM time WHERE date = {desiredInput}";
-            long result = (long)checkCmd.ExecuteScalar();
-            if (result > 0)
+            using (this.Connection)
             {
-                return false;
-            }
-            else
-            {
-                return true;
+                this.Connection.Open();
+                var checkCmd = this.Connection.CreateCommand();
+                checkCmd.CommandText = $"SELECT COUNT(*) FROM time WHERE date = {desiredInput}";
+                long result = (long)checkCmd.ExecuteScalar();
+                if (result > 0)
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
             }
         }
         public static string ParseDate(string day)
