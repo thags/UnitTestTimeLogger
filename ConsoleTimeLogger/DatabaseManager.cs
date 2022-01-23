@@ -28,9 +28,9 @@ namespace ConsoleTimeLogger
                                                                     );";
                 createTable.ExecuteNonQuery();
             }
-            catch
+            catch (SqliteException e)
             {
-                Console.WriteLine("Table already exists");
+                Console.WriteLine(e.Message);
             }
         }
 
@@ -86,9 +86,9 @@ namespace ConsoleTimeLogger
                 updateCmd.ExecuteNonQuery();
                 transaction.Commit();
             }
-            catch
+            catch (SqliteException e)
             {
-                Console.WriteLine("Are you sure you inputted the correct date?");
+                Console.WriteLine(e.Message);
             }
         }
 
@@ -102,9 +102,9 @@ namespace ConsoleTimeLogger
                 deleteCmd.ExecuteNonQuery();
                 transaction.Commit();
             }
-            catch
+            catch (SqliteException e)
             {
-                Console.WriteLine("Are you sure you inputted the correct Date?");
+                Console.WriteLine(e.Message);
             }
         }
 
@@ -169,9 +169,9 @@ namespace ConsoleTimeLogger
                 DateTime dt = new DateTime(long.Parse(day));
                 return dt.ToString("MM-dd-yyyy");
             }
-            catch
+            catch (FormatException e)
             {
-                return "false";
+                return e.Message;
             }
             
         }
@@ -182,9 +182,9 @@ namespace ConsoleTimeLogger
                 TimeSpan ts = new TimeSpan(long.Parse(hours));
                 return ts.ToString("hh\\:mm");
             }
-            catch
+            catch (FormatException e)
             {
-                return "false";
+                return e.Message;
             }
         }
     }

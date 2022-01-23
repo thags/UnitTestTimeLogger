@@ -156,7 +156,7 @@ namespace ConsoleTimeLoggerTests
         {
             //Arange
             string input = "637783200000000000TEST";
-            string expect = "false";
+            string expect = "Input string was not in a correct format.";
 
             // Act
             string result = DatabaseManager.ParseDate(input);
@@ -186,7 +186,7 @@ namespace ConsoleTimeLoggerTests
         {
             //Arange
             string input = "72000000000TEST";
-            string expect = "false";
+            string expect = "Input string was not in a correct format.";
 
             // Act
             string result = DatabaseManager.ParseHours(input);
