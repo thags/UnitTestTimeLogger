@@ -4,10 +4,10 @@ using ConsoleTimeLogger;
 namespace ConsoleTimeLoggerTests
 {
     [TestClass]
-    public class CorrectYearTests
+    public class WhenUserCorrectYearInputCheckIsCalled
     {
         [TestMethod]
-        public void CorrectYearInput()
+        public void AndYearInputIsCorrect()
         {
             // Arrange
             string input = "2015";
@@ -19,7 +19,7 @@ namespace ConsoleTimeLoggerTests
             Assert.IsTrue(result, "Correct year input should return true");
         }
         [TestMethod]
-        public void ToLongYearInput()
+        public void AndInputIsTooLong()
         {
             // Arrange
             string input = "2015234423";
@@ -31,7 +31,7 @@ namespace ConsoleTimeLoggerTests
             Assert.IsFalse(result, "Correct year input should only have a length of 4");
         }
         [TestMethod]
-        public void ToShortYearInput()
+        public void AndInputIsTooShort()
         {
             // Arrange
             string input = "201";
@@ -42,7 +42,7 @@ namespace ConsoleTimeLoggerTests
             // Assert
             Assert.IsFalse(result, "Correct year input should have a length of 4");
         }
-        public void LettersShouldAlwaysReturnFalse()
+        public void AndAStringIsInputted()
         {
             // Arrange
             string input = "TEST";
@@ -55,10 +55,10 @@ namespace ConsoleTimeLoggerTests
         }
     }
     [TestClass]
-    public class CorrectMonthTests
+    public class WhenUserCorrectMonthInputCheckIsCalled
     {
         [TestMethod]
-        public void CorrectMonthInput()
+        public void AndInputIsCorrect()
         {
             // Arrange
             string monthInput = "8";
@@ -70,7 +70,7 @@ namespace ConsoleTimeLoggerTests
             Assert.IsTrue(result, "Correct month input should return true");
         }
         [TestMethod]
-        public void ZeroIsNotAMonth()
+        public void AndZeroIsInputted()
         {
             // Arrange
             string input = "0";
@@ -82,7 +82,7 @@ namespace ConsoleTimeLoggerTests
             Assert.IsFalse(result, "Zero should not be a month");
         }
         [TestMethod]
-        public void NegativesAreNotAMonth()
+        public void AndANegativeIsInput()
         {
             // Arrange
             string input = "-1";
@@ -94,7 +94,7 @@ namespace ConsoleTimeLoggerTests
             Assert.IsFalse(result, "Negatives should not be a month");
         }
         [TestMethod]
-        public void Over12IsNotAMonth()
+        public void AndOver12IsInput()
         {
             // Arrange
             string input = "13";
@@ -106,7 +106,7 @@ namespace ConsoleTimeLoggerTests
             Assert.IsFalse(result, "Over 12 should not be a month");
         }
         [TestMethod]
-        public void LettersCanNotBeInInput()
+        public void AndLettersAreInput()
         {
             // Arrange
             string input = "12Test";
@@ -119,10 +119,10 @@ namespace ConsoleTimeLoggerTests
         }
     }
     [TestClass]
-    public class CorrectHoursParseInReports
+    public class WhenReportsHourParseIsCalled
     {
         [TestMethod]
-        public void LongTickShouldFormatToString()
+        public void AndCorrectTickIsInput()
         {
             //Arange
             long ticks = 9999214234;
@@ -136,10 +136,10 @@ namespace ConsoleTimeLoggerTests
         }
     }
     [TestClass]
-    public class CorrectDateParseInDBManager
+    public class WhenDateParseIsCalledInDBManager
     {
         [TestMethod]
-        public void CorrectStringShouldReturnProperFormat()
+        public void AndCorrectInput()
         {
             //Arange
             string input = "637783200000000000";
@@ -152,7 +152,7 @@ namespace ConsoleTimeLoggerTests
             Assert.AreEqual(expect, result, "Correct date should return properly formatted");
         }
         [TestMethod]
-        public void LettersShouldReturnFalseString()
+        public void AndLettersAreInput()
         {
             //Arange
             string input = "637783200000000000TEST";
@@ -166,10 +166,10 @@ namespace ConsoleTimeLoggerTests
         }
     }
     [TestClass]
-    public class CorrectHourParseInDBManager
+    public class WhenParseHoursInDBManagerisCalled
     {
         [TestMethod]
-        public void CorrectStringShouldReturnProperFormat()
+        public void AndCorrectInput()
         {
             //Arange
             string input = "72000000000";
@@ -182,7 +182,7 @@ namespace ConsoleTimeLoggerTests
             Assert.AreEqual(expect, result, "String ticks should return properly formatted");
         }
         [TestMethod]
-        public void LettersShouldReturnFalseString()
+        public void AndLettersAreInInput()
         {
             //Arange
             string input = "72000000000TEST";
