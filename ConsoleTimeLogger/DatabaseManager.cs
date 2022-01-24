@@ -24,7 +24,7 @@ namespace ConsoleTimeLogger
                 {
                     this.Connection.Open();
                     var createTable = this.Connection.CreateCommand();
-                    createTable.CommandText = @"ATE TABLE time(id INTEGER PRIMARY KEY,
+                    createTable.CommandText = @"CREATE TABLE time(id INTEGER PRIMARY KEY,
                                                                 hours LONG, 
                                                                 date LONG
                                                                     );";
