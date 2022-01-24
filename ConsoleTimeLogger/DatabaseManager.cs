@@ -126,10 +126,7 @@ namespace ConsoleTimeLogger
                     command.CommandText = $"DELETE FROM time WHERE date = {day}";
                     try
                     {
-                        var transaction = connection.BeginTransaction();
                         command.ExecuteNonQuery();
-                        transaction.Commit();
-
                     }
                     catch (SqliteException e)
                     {
@@ -159,9 +156,7 @@ namespace ConsoleTimeLogger
                         bool rowDoesntExist = CheckRowDateDoesntExist(day);
                         if (rowDoesntExist)
                         {
-                            var transaction = connection.BeginTransaction();
                             command.ExecuteNonQuery();
-                            transaction.Commit();
                         }
                         else
                         {
