@@ -24,7 +24,7 @@ namespace ConsoleTimeLogger
                 {
                     this.Connection.Open();
                     var createTable = this.Connection.CreateCommand();
-                    createTable.CommandText = @"CREATE TABLE time(id INTEGER PRIMARY KEY,
+                    createTable.CommandText = @"ATE TABLE time(id INTEGER PRIMARY KEY,
                                                                 hours LONG, 
                                                                 date LONG
                                                                     );";
@@ -33,6 +33,10 @@ namespace ConsoleTimeLogger
                 catch (SqliteException e)
                 {
                     Console.WriteLine(e.Message);
+                }
+                finally
+                {
+                    this.Connection.Close();
                 }
             }
             //we want to make sure that the DB has the proper table and columns
