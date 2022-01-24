@@ -7,229 +7,233 @@ namespace ConsoleTimeLogger
 {
     public class DatabaseManager
     {
-        readonly private SqliteConnection Connection;
+        readonly private string Filename;
         public DatabaseManager(string fileName)
         {
-            this.Connection = new SqliteConnection($"Data Source={fileName}");
-            //this.Connection.Open();
+            this.Filename = fileName;
             this.CreateTableIfNonExistent();
         }
         public static long GetTodayDate() => DateTime.Today.Ticks;
 
         public void CreateTableIfNonExistent()
         {
-            using (this.Connection)
+            using (var connection = new SqliteConnection($"Data Source={this.Filename}"))
             {
-                try
+                using (var command = connection.CreateCommand())
                 {
-                    this.Connection.Open();
-                    var createTable = this.Connection.CreateCommand();
-                    createTable.CommandText = @"CREATE TABLE time(id INTEGER PRIMARY KEY,
+                    connection.Open();
+                    command.CommandText = @"CREATE TABLE time(id INTEGER PRIMARY KEY,
                                                                 hours LONG, 
                                                                 date LONG
                                                                     );";
-                    createTable.ExecuteNonQuery();
-                }
-                catch (SqliteException e)
-                {
-                    Console.WriteLine(e.Message);
-                }
-                finally
-                {
-                    this.Connection.Close();
-                }
-            }
-            //we want to make sure that the DB has the proper table and columns
-            
+                    try
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                    catch (SqliteException e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                    finally
+                    {
+                        command.Dispose();
+                        connection.Dispose();
+                    }
+                } 
+            }   
         }
 
         public void View(string selection=null, int limit = 1, long specific = -1)
         {
-            using (this.Connection)
+            using (var connection = new SqliteConnection($"Data Source={this.Filename}"))
             {
-                try
+                using (var command = connection.CreateCommand())
                 {
-                    this.Connection.Open();
+                    connection.Open();
                     var tableData = new List<List<object>> { new List<object> { "Date", "Hours" } };
-                    var selectCmd = this.Connection.CreateCommand();
-                    selectCmd.CommandText = "SELECT * FROM time";
+                    command.CommandText = "SELECT * FROM time";
 
                     switch (selection)
                     {
                         case null:
                             Console.WriteLine("Todays Entry: ");
-                            selectCmd.CommandText = $"SELECT * FROM time WHERE date={GetTodayDate()}";
+                            command.CommandText = $"SELECT * FROM time WHERE date={GetTodayDate()}";
                             break;
                         case "all":
-                            selectCmd.CommandText = $"SELECT * FROM time ORDER BY date DESC";
+                            command.CommandText = $"SELECT * FROM time ORDER BY date DESC";
                             break;
                         case "limit":
-                            selectCmd.CommandText = $"SELECT * FROM time ORDER BY date DESC LIMIT {limit}";
+                            command.CommandText = $"SELECT * FROM time ORDER BY date DESC LIMIT {limit}";
                             break;
                         case "specific":
-                            selectCmd.CommandText = $"SELECT * FROM time WHERE date={specific}";
+                            command.CommandText = $"SELECT * FROM time WHERE date={specific}";
                             break;
                         default:
-                            //selectCmd.CommandText = $"SELECT * FROM time WHERE date={day}";
+                            //command.CommandText = $"SELECT * FROM time WHERE date={day}";
                             break;
                     }
-
-                    using var reader = selectCmd.ExecuteReader();
-
-                    while (reader.Read())
+                    using (var reader = command.ExecuteReader())
                     {
+                        while (reader.Read())
+                        {
 
-                        var hours = reader.GetString(1);
-                        var date = reader.GetString(2);
-                        tableData.Add(new List<object> { ParseDate(date), ParseHours(hours) });
+                            var hours = reader.GetString(1);
+                            var date = reader.GetString(2);
+                            tableData.Add(new List<object> { ParseDate(date), ParseHours(hours) });
+                        }
+
+                        ConsoleTableBuilder
+                            .From(tableData)
+                            .WithFormat(ConsoleTableBuilderFormat.Alternative)
+                            .ExportAndWriteLine(TableAligntment.Left);
                     }
-
-                    ConsoleTableBuilder
-                        .From(tableData)
-                        .WithFormat(ConsoleTableBuilderFormat.Alternative)
-                        .ExportAndWriteLine(TableAligntment.Left);
-                }
-                catch (SqliteException e)
-                {
-                    Console.WriteLine(e.Message);
-                }
-                finally
-                {
-                    this.Connection.Close();
                 }
             }
             
         }
         public void Update(long addHours, long day)
         {
-            try
+            using (var connection = new SqliteConnection($"Data Source={this.Filename}"))
             {
-                using (this.Connection)
+                using (var command = connection.CreateCommand())
                 {
-                    this.Connection.Open();
-                    var transaction = this.Connection.BeginTransaction();
-                    var updateCmd = this.Connection.CreateCommand();
-
-                    updateCmd.CommandText = $"UPDATE time SET hours={addHours} WHERE date = {day}";
-                    updateCmd.ExecuteNonQuery();
-                    transaction.Commit();
+                    connection.Open();
+                    command.CommandText = $"UPDATE time SET hours={addHours} WHERE date = {day}";
+                    try
+                    {
+                        var transaction = connection.BeginTransaction();
+                        command.ExecuteNonQuery();
+                        transaction.Commit();
+                    }
+                    catch (SqliteException e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                    finally
+                    {
+                        command.Dispose();
+                        connection.Dispose();
+                    }
                 }
-            }
-            catch (SqliteException e)
-            {
-                Console.WriteLine(e.Message);
-            }
-            finally
-            {
-                this.Connection.Close();
             }
         }
 
         public void Delete(long day)
         {
-            try
+            using (var connection = new SqliteConnection($"Data Source={this.Filename}"))
             {
-                using (this.Connection)
+                using (var command = connection.CreateCommand())
                 {
-                    this.Connection.Open();
-                    var transaction = this.Connection.BeginTransaction();
-                    var deleteCmd = this.Connection.CreateCommand();
-                    deleteCmd.CommandText = $"DELETE FROM time WHERE date = {day}";
-                    deleteCmd.ExecuteNonQuery();
-                    transaction.Commit();
+                    connection.Open();
+                    command.CommandText = $"DELETE FROM time WHERE date = {day}";
+                    try
+                    {
+                        var transaction = connection.BeginTransaction();
+                        command.ExecuteNonQuery();
+                        transaction.Commit();
+
+                    }
+                    catch (SqliteException e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                    finally
+                    {
+                        command.Dispose();
+                        connection.Dispose();
+                    }
                 }
-            }
-            catch (SqliteException e)
-            {
-                Console.WriteLine(e.Message);
-            }
-            finally
-            {
-                this.Connection.Close();
+                
             }
         }
 
         public void InsertRow(long day, long hoursInput)
         {
-            using (this.Connection)
+            using (var connection = new SqliteConnection($"Data Source={this.Filename}"))
             {
-                try
+                using (var command = connection.CreateCommand())
                 {
-                    Connection.Open();
-                    bool rowDoesntExist = CheckRowDateDoesntExist(day);
-                    if (rowDoesntExist)
+                    connection.Open();
+                    command.CommandText = $"INSERT INTO time(hours, date) VALUES({hoursInput},{day})";
+
+                    try
                     {
-                        var transaction = this.Connection.BeginTransaction();
-                        var insertCmd = this.Connection.CreateCommand();
-
-                        insertCmd.CommandText = $"INSERT INTO time(hours, date) VALUES({hoursInput},{day})";
-                        insertCmd.ExecuteNonQuery();
-                        transaction.Commit();
-                    }
-                    else
-                    {
-                        Console.Clear();
-                        this.View("specific", specific: day);
-
-                        Console.WriteLine($"Your entered date of {ParseDate(day.ToString())} already exists");
-                        Console.WriteLine("U to update this days entry to the time provided");
-                        Console.WriteLine("0 or any other input to return to the main menu with no changes");
-
-                        string choice = Console.ReadLine().ToUpper();
-                        switch (choice)
+                        bool rowDoesntExist = CheckRowDateDoesntExist(day);
+                        if (rowDoesntExist)
                         {
-                            case "U":
-                                Update(hoursInput, day);
-                                View("specific", specific: day);
-
-                                Console.WriteLine("Entry has been updated");
-                                Console.WriteLine("Press any key to return to main menu");
-                                Console.ReadLine();
-                                break;
-                            default:
-                                break;
+                            var transaction = connection.BeginTransaction();
+                            command.ExecuteNonQuery();
+                            transaction.Commit();
                         }
-                        Console.Clear();
+                        else
+                        {
+                            Console.Clear();
+                            this.View("specific", specific: day);
+
+                            Console.WriteLine($"Your entered date of {ParseDate(day.ToString())} already exists");
+                            Console.WriteLine("U to update this days entry to the time provided");
+                            Console.WriteLine("0 or any other input to return to the main menu with no changes");
+
+                            string choice = Console.ReadLine().ToUpper();
+                            switch (choice)
+                            {
+                                case "U":
+                                    Update(hoursInput, day);
+                                    View("specific", specific: day);
+
+                                    Console.WriteLine("Entry has been updated");
+                                    Console.WriteLine("Press any key to return to main menu");
+                                    Console.ReadLine();
+                                    break;
+                                default:
+                                    break;
+                            }
+                            Console.Clear();
+                        }
                     }
-                }
-                catch (SqliteException e)
-                {
-                    Console.WriteLine(e.Message);
-                }
-                finally
-                {
-                    this.Connection.Close();
+                    catch (SqliteException e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                    finally
+                    {
+                        command.Dispose();
+                        connection.Dispose();
+                    }
                 }
             }
             
         }
         private bool CheckRowDateDoesntExist(long desiredInput)
         {
-            using (this.Connection)
+            using (var connection = new SqliteConnection($"Data Source={this.Filename}"))
             {
-                try
+                using (var command = connection.CreateCommand())
                 {
-                    this.Connection.Open();
-                    var checkCmd = this.Connection.CreateCommand();
-                    checkCmd.CommandText = $"SELECT COUNT(*) FROM time WHERE date = {desiredInput}";
-                    long result = (long)checkCmd.ExecuteScalar();
-                    if (result > 0)
+                    connection.Open();
+                    command.CommandText = $"SELECT COUNT(*) FROM time WHERE date = {desiredInput}";
+                    try
                     {
+                        long result = (long)command.ExecuteScalar();
+                        if (result > 0)
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            return true;
+                        }
+                    }
+                    catch (SqliteException e)
+                    {
+                        Console.WriteLine(e.Message);
                         return false;
                     }
-                    else
+                    finally
                     {
-                        return true;
+                        command.Dispose();
+                        connection.Dispose();
                     }
-                }
-                catch (SqliteException e)
-                {
-                    Console.WriteLine(e.Message);
-                    return false;
-                }
-                finally
-                {
-                    this.Connection.Close();
                 }
                 
             }

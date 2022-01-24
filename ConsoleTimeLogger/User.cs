@@ -9,8 +9,16 @@ namespace ConsoleTimeLogger
         readonly Reports GetReports;
         public User(string dbFile)
         {
-            this.DB = new DatabaseManager(dbFile);
-            this.GetReports = new Reports(dbFile);
+            try
+            {
+                this.DB = new DatabaseManager(dbFile);
+                this.GetReports = new Reports(dbFile);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            
         }
         public void InputLoop()
         {
