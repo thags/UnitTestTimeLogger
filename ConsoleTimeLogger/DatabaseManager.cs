@@ -99,15 +99,9 @@ namespace ConsoleTimeLogger
                 {
                     connection.Open();
                     command.CommandText = $"UPDATE time SET hours={addHours} WHERE date = {day}";
-
-                    var transaction = connection.BeginTransaction();
-                    command.Transaction = transaction;
-
-                    
                     try
                     {
                         command.ExecuteNonQuery();
-                        transaction.Commit();
                     }
                     catch (SqliteException e)
                     {
