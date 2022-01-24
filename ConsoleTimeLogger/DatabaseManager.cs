@@ -132,44 +132,50 @@ namespace ConsoleTimeLogger
 
         public void InsertRow(long day, long hoursInput)
         {
-            bool rowDoesntExist = CheckRowDateDoesntExist(day);
-
             using (this.Connection)
             {
-                Connection.Open();
-                if (rowDoesntExist)
+                try
                 {
-                    var transaction = this.Connection.BeginTransaction();
-                    var insertCmd = this.Connection.CreateCommand();
-
-                    insertCmd.CommandText = $"INSERT INTO time(hours, date) VALUES({hoursInput},{day})";
-                    insertCmd.ExecuteNonQuery();
-                    transaction.Commit();
-                }
-                else
-                {
-                    Console.Clear();
-                    this.View("specific", specific: day);
-
-                    Console.WriteLine($"Your entered date of {ParseDate(day.ToString())} already exists");
-                    Console.WriteLine("U to update this days entry to the time provided");
-                    Console.WriteLine("0 or any other input to return to the main menu with no changes");
-
-                    string choice = Console.ReadLine().ToUpper();
-                    switch (choice)
+                    Connection.Open();
+                    bool rowDoesntExist = CheckRowDateDoesntExist(day);
+                    if (rowDoesntExist)
                     {
-                        case "U":
-                            Update(hoursInput, day);
-                            View("specific", specific: day);
+                        var transaction = this.Connection.BeginTransaction();
+                        var insertCmd = this.Connection.CreateCommand();
 
-                            Console.WriteLine("Entry has been updated");
-                            Console.WriteLine("Press any key to return to main menu");
-                            Console.ReadLine();
-                            break;
-                        default:
-                            break;
+                        insertCmd.CommandText = $"INSERT INTO time(hours, date) VALUES({hoursInput},{day})";
+                        insertCmd.ExecuteNonQuery();
+                        transaction.Commit();
                     }
-                    Console.Clear();
+                    else
+                    {
+                        Console.Clear();
+                        this.View("specific", specific: day);
+
+                        Console.WriteLine($"Your entered date of {ParseDate(day.ToString())} already exists");
+                        Console.WriteLine("U to update this days entry to the time provided");
+                        Console.WriteLine("0 or any other input to return to the main menu with no changes");
+
+                        string choice = Console.ReadLine().ToUpper();
+                        switch (choice)
+                        {
+                            case "U":
+                                Update(hoursInput, day);
+                                View("specific", specific: day);
+
+                                Console.WriteLine("Entry has been updated");
+                                Console.WriteLine("Press any key to return to main menu");
+                                Console.ReadLine();
+                                break;
+                            default:
+                                break;
+                        }
+                        Console.Clear();
+                    }
+                }
+                catch (SqliteException e)
+                {
+                    Console.WriteLine(e.Message);
                 }
             }
             
