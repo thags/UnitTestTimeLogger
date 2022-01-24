@@ -47,45 +47,56 @@ namespace ConsoleTimeLogger
         {
             using (this.Connection)
             {
-                this.Connection.Open();
-                var tableData = new List<List<object>> { new List<object> { "Date", "Hours" } };
-                var selectCmd = this.Connection.CreateCommand();
-                selectCmd.CommandText = "SELECT * FROM time";
-
-                switch (selection)
+                try
                 {
-                    case null:
-                        Console.WriteLine("Todays Entry: ");
-                        selectCmd.CommandText = $"SELECT * FROM time WHERE date={GetTodayDate()}";
-                        break;
-                    case "all":
-                        selectCmd.CommandText = $"SELECT * FROM time ORDER BY date DESC";
-                        break;
-                    case "limit":
-                        selectCmd.CommandText = $"SELECT * FROM time ORDER BY date DESC LIMIT {limit}";
-                        break;
-                    case "specific":
-                        selectCmd.CommandText = $"SELECT * FROM time WHERE date={specific}";
-                        break;
-                    default:
-                        //selectCmd.CommandText = $"SELECT * FROM time WHERE date={day}";
-                        break;
+                    this.Connection.Open();
+                    var tableData = new List<List<object>> { new List<object> { "Date", "Hours" } };
+                    var selectCmd = this.Connection.CreateCommand();
+                    selectCmd.CommandText = "SELECT * FROM time";
+
+                    switch (selection)
+                    {
+                        case null:
+                            Console.WriteLine("Todays Entry: ");
+                            selectCmd.CommandText = $"SELECT * FROM time WHERE date={GetTodayDate()}";
+                            break;
+                        case "all":
+                            selectCmd.CommandText = $"SELECT * FROM time ORDER BY date DESC";
+                            break;
+                        case "limit":
+                            selectCmd.CommandText = $"SELECT * FROM time ORDER BY date DESC LIMIT {limit}";
+                            break;
+                        case "specific":
+                            selectCmd.CommandText = $"SELECT * FROM time WHERE date={specific}";
+                            break;
+                        default:
+                            //selectCmd.CommandText = $"SELECT * FROM time WHERE date={day}";
+                            break;
+                    }
+
+                    using var reader = selectCmd.ExecuteReader();
+
+                    while (reader.Read())
+                    {
+
+                        var hours = reader.GetString(1);
+                        var date = reader.GetString(2);
+                        tableData.Add(new List<object> { ParseDate(date), ParseHours(hours) });
+                    }
+
+                    ConsoleTableBuilder
+                        .From(tableData)
+                        .WithFormat(ConsoleTableBuilderFormat.Alternative)
+                        .ExportAndWriteLine(TableAligntment.Left);
                 }
-
-                using var reader = selectCmd.ExecuteReader();
-
-                while (reader.Read())
+                catch (SqliteException e)
                 {
-
-                    var hours = reader.GetString(1);
-                    var date = reader.GetString(2);
-                    tableData.Add(new List<object> { ParseDate(date), ParseHours(hours) });
+                    Console.WriteLine(e.Message);
                 }
-
-                ConsoleTableBuilder
-                    .From(tableData)
-                    .WithFormat(ConsoleTableBuilderFormat.Alternative)
-                    .ExportAndWriteLine(TableAligntment.Left);
+                finally
+                {
+                    this.Connection.Close();
+                }
             }
             
         }
@@ -108,6 +119,10 @@ namespace ConsoleTimeLogger
             {
                 Console.WriteLine(e.Message);
             }
+            finally
+            {
+                this.Connection.Close();
+            }
         }
 
         public void Delete(long day)
@@ -127,6 +142,10 @@ namespace ConsoleTimeLogger
             catch (SqliteException e)
             {
                 Console.WriteLine(e.Message);
+            }
+            finally
+            {
+                this.Connection.Close();
             }
         }
 
@@ -177,6 +196,10 @@ namespace ConsoleTimeLogger
                 {
                     Console.WriteLine(e.Message);
                 }
+                finally
+                {
+                    this.Connection.Close();
+                }
             }
             
         }
@@ -184,18 +207,31 @@ namespace ConsoleTimeLogger
         {
             using (this.Connection)
             {
-                this.Connection.Open();
-                var checkCmd = this.Connection.CreateCommand();
-                checkCmd.CommandText = $"SELECT COUNT(*) FROM time WHERE date = {desiredInput}";
-                long result = (long)checkCmd.ExecuteScalar();
-                if (result > 0)
+                try
                 {
+                    this.Connection.Open();
+                    var checkCmd = this.Connection.CreateCommand();
+                    checkCmd.CommandText = $"SELECT COUNT(*) FROM time WHERE date = {desiredInput}";
+                    long result = (long)checkCmd.ExecuteScalar();
+                    if (result > 0)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        return true;
+                    }
+                }
+                catch (SqliteException e)
+                {
+                    Console.WriteLine(e.Message);
                     return false;
                 }
-                else
+                finally
                 {
-                    return true;
+                    this.Connection.Close();
                 }
+                
             }
         }
         public static string ParseDate(string day)
