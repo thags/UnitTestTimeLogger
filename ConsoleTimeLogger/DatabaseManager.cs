@@ -34,11 +34,6 @@ namespace ConsoleTimeLogger
                     {
                         Console.WriteLine(e.Message);
                     }
-                    finally
-                    {
-                        command.Dispose();
-                        connection.Dispose();
-                    }
                 } 
             }   
         }
@@ -107,11 +102,6 @@ namespace ConsoleTimeLogger
                     {
                         Console.WriteLine(e.Message);
                     }
-                    finally
-                    {
-                        command.Dispose();
-                        connection.Dispose();
-                    }
                 }
             }
         }
@@ -131,11 +121,6 @@ namespace ConsoleTimeLogger
                     catch (SqliteException e)
                     {
                         Console.WriteLine(e.Message);
-                    }
-                    finally
-                    {
-                        command.Dispose();
-                        connection.Dispose();
                     }
                 }
                 
@@ -188,11 +173,6 @@ namespace ConsoleTimeLogger
                     {
                         Console.WriteLine(e.Message);
                     }
-                    finally
-                    {
-                        command.Dispose();
-                        connection.Dispose();
-                    }
                 }
             }
             
@@ -221,11 +201,6 @@ namespace ConsoleTimeLogger
                     {
                         Console.WriteLine(e.Message);
                         return false;
-                    }
-                    finally
-                    {
-                        command.Dispose();
-                        connection.Dispose();
                     }
                 }
                 
