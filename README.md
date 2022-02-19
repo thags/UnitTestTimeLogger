@@ -1,5 +1,5 @@
 # ConsoleTimeLogger
-My first C# application, and first time using Visual Studio. 
+My first C# application, and first time using Visual Studio, but reworked slightly and unit testing added. 
 
 Console based CRUD application to track time spent coding.
 Developed using C# and SQLite.
